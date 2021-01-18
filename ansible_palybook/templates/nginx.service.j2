@@ -5,7 +5,6 @@ Wants=network-online.target
 
 [Service]
 Type=forking
-PIDFile=/opt/clouddata/modules/nginx/nginx.pid
 ExecStartPre=/opt/clouddata/modules/nginx/sbin/nginx -t
 ExecStart=/opt/clouddata/modules/nginx/sbin/nginx
 ExecReload=/opt/clouddata/modules/nginx/sbin/nginx -s reload

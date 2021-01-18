@@ -1,11 +1,13 @@
- [Unit]Description=nacos
- After=network.target
+[Unit]
+Description=nacos
+After=network.target
 
 [Service]
 Type=forking
-ExecStart=/opt/clouddata/modules/nacos/bin/startup.sh-m standalone
+ExecStart=/opt/clouddata/modules/nacos/bin/startup.sh -m standalone
 ExecReload=/opt/clouddata/modules/nacos/bin/shutdown.sh
 ExecStop=/opt/clouddata/modules/nacos/bin/shutdown.sh
+Environment=JAVA_HOME=/opt/clouddata/modules/jdk1.8.0_271
 PrivateTmp=true
 
 [Install]

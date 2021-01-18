@@ -1,6 +1,7 @@
 - name: Configure webserver with kafka
   hosts: kafka
-  vars: kafka_dir: "kafka_2.13-2.4.0"
+  vars: 
+    kafka_dir: "kafka_2.13-2.4.0"
   tasks:
     - name: copy kafka
       unarchive: src=files/kafka_2.13-2.4.0.tgz dest=/opt/clouddata/modules

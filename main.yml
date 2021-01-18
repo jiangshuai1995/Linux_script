@@ -1,10 +1,25 @@
-- name: Config ALL HOST
-  hosts: all
+- name: config ssh 
+  hosts: test
+  user: root
+  tasks:
+   - name: ssh-copy
+     authorized_key: user=root key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+- name: Add user
+  hosts: test
+  tasks:
+  - name: create user
+    user: name={{ item.name }} password={{ item.chpass | password_hash('sha512') }}  update_password=always
+    with_items:
+    - { name: 'clouddata', chpass: '123456' }
+
+- name: Configure webserver with jdk
+  hosts: test
   tasks:
     - name: delete system jdk noarch
       shell: rpm -qa | grep java |grep -v  ".noarch" |xargs -l -t rpm -e --nodeps
     - name:  copy jdk-8u271-linux-x64.tar.gz remote hosts
-      unarchive: src=files/jdk-8u271-linux-x64.tar.gz dest=/opt/clouddata/modules
+      unarchive: src=files/jdk-8u271-linux-x64.tar.gz dest=/opt/clouddata/modules/
     - name: java_profile config
       shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
       with_items:
@@ -18,27 +33,65 @@
       shell: systemctl stop firewalld && systemctl disable firewalld
     - name: Change SELINUX
       shell: sed -i "s/enforcing/disabled/g" /etc/selinux/config && setenforce 0
-- name: Install Hive
-  hosts: hive
-  tasks:
-    - name: copy hive 
-      unarchive: src=files/apache-hive-3.1.2-bin.tar.gz dest=/opt/clouddata/modules
-    - name:
-      #TODO 
 
-- name: Install nginx
+- name: Configure webserver with kafka
+  hosts: test
+  vars: kafka_dir: "kafka_2.13-2.4.0"
+  tasks:
+    - name: copy kafka
+      unarchive: src=files/kafka_2.13-2.4.0.tgz dest=/opt/clouddata/modules
+    - name:  modify kafka server.properties
+      template: src=server.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/server.properties
+    - name:  modify kafka zookeeper.properties
+      template: src=zookeeper.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/zookeeper.properties
+    - name:  config zookeeper service
+      template: src=zookeeper.service.j2 dest=/etc/systemd/system/zookeeper.service
+      notify: restart zookeeper
+    - name:  config kafka service
+      template: src=kafka.service.j2 dest=/etc/systemd/system/kafka.service
+      notify: restart kafka
+    - name:  boot zookeeper service
+      service: name=zookeeper state=started
+    - name:  boot kafka service
+      service: name=kafka state=started
+  handlers:
+    - name: restart zookeeper
+      service: name=zookeeper state=restarted
+    - name: restart kafka
+      service: name=kafka state=restarted
+
+- name: Configure webserver with nacos
+  hosts: nacos
+  vars:
+    nacos_dir: "nacos"
+  tasks:
+    - name: copy nacos
+      unarchive: src=files/nacos-server-1.1.4.tar.gz dest=/opt/clouddata/modules
+    - name:  config nacos service
+      template: src=nacos.service.j2 dest=/etc/systemd/system/nacos.service
+    - name: boot nacos service
+      service: name=nacos state=started
+
+- name: Configure webserver with nginx
   hosts: nginx
   tasks:
     - name: copy nginx
-      #TODO
-    - name: config nginx server
-      #TODO
-    - name: start nginx
-      #TODO
+      unarchive: src=files/nginx-1.16.1.tar.gz dest=/opt/clouddata/modules/
+    - name: config nginx service
+      template: src=nginx.service.j2 dest=/etc/systemd/system/nginx.service
+    - name: config nginx.conf
+      template: src=nginx.conf.j2 dest=/opt/clouddata/modules/nginx/conf/nginx.conf
+    - name: boot start nginx
+      service: name=nginx state=started
 
-- name: Install nacos
-  hosts: nacos
+- name: Configure webserver with mysql
+  hosts: mysql
   tasks:
-    - name copy nacos
-    #TODO
-    - name: 
+    - name: copy mysql
+      unarchive: src=files/mysql-centos7.2.tar.gz dest=/opt/modules
+    - name:  install script
+      command: chdir=/opt/modules/mysql-centos7.2 sh run.sh
+    - name: shell
+      shell: mysqladmin -u root password "123456"
+    - name: yuancheng
+      shell: mysql -uroot -p123456 -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456';flush privileges;"  -D mysql

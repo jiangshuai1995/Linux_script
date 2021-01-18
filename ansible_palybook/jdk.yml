@@ -16,7 +16,14 @@
       shell: ntpdate cn.pool.ntp.org
     - name: Close firewalld
       shell: systemctl stop firewalld && systemctl disable firewalld
+    - name: once Change selinux
+      shell: setenforce 0
     - name: Change SELINUX
-      shell: sed -i "s/enforcing/disabled/g" /etc/selinux/config && setenforce 0
+      lineinfile: 
+        dest: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: '^SELINUX=disable'
+
+      
 
 # 如果已经删除了系统自带的jdk可能会报错

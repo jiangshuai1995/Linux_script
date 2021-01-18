@@ -8,9 +8,7 @@ Type=forking
 ExecStart=/usr/bin/bash /opt/clouddata/modules/{{kafka_dir}}/bin/zookeeper-server-start.sh -daemon /opt/clouddata/modules/{{kafka_dir}}/config/zookeeper.properties
 ExecStop=/usr/bin/bash /opt/clouddata/modules/{{kafka_dir}}/bin/zookeeper-server-stop.sh
 ExecReload=$ExecStop;$ExecStart
-LimitCORE=infinity
-LimitNOFILE=10240
-LimitNPROC=10240
+Environment=JAVA_HOME=/opt/clouddata/modules/jdk1.8.0_271
 
 [Install]
 WantedBy=multi-user.target
