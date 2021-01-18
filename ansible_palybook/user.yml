@@ -1,0 +1,7 @@
+- name: Add user
+  hosts: all
+  tasks:
+  - name: create user
+    user: name={{ item.name }} password={{ item.chpass | password_hash('sha512') }}  update_password=always
+    with_items:
+    - { name: 'clouddata', chpass: '123456' }

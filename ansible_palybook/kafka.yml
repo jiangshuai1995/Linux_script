@@ -1,0 +1,25 @@
+- name: Configure webserver with kafka
+  hosts: kafka
+  vars: kafka_dir: "kafka_2.13-2.4.0"
+  tasks:
+    - name: copy kafka
+      unarchive: src=files/kafka_2.13-2.4.0.tgz dest=/opt/clouddata/modules
+    - name:  modify kafka server.properties
+      template: src=server.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/server.properties
+    - name:  modify kafka zookeeper.properties
+      template: src=zookeeper.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/zookeeper.properties
+    - name:  config zookeeper service
+      template: src=zookeeper.service.j2 dest=/etc/systemd/system/zookeeper.service
+      notify: restart zookeeper
+    - name:  config kafka service
+      template: src=kafka.service.j2 dest=/etc/systemd/system/kafka.service
+      notify: restart kafka
+    - name:  boot zookeeper service
+      service: name=zookeeper state=started
+    - name:  boot kafka service
+      service: name=kafka state=started
+  handlers:
+    - name: restart zookeeper
+      service: name=zookeeper state=restarted
+    - name: restart kafka
+      service: name=kafka state=restarted

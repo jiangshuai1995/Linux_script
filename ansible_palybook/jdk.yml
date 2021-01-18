@@ -1,0 +1,22 @@
+- name: Configure webserver with nginx
+  hosts: all
+  tasks:
+    - name: delete system jdk noarch
+      shell: rpm -qa | grep java |grep -v  ".noarch" |xargs -l -t rpm -e --nodeps
+    - name:  copy jdk-8u271-linux-x64.tar.gz remote hosts
+      unarchive: src=files/jdk-8u271-linux-x64.tar.gz dest=/opt/clouddata/modules/
+    - name: java_profile config
+      shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
+      with_items:
+        - export JAVA_HOME=/opt/clouddata/modules/jdk1.8.0_271
+        - export JRE_HOME=/opt/clouddata/modules/jdk1.8.0_271/jre
+        - export CLASSPATH=.:\$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:\$JRE_HOME/lib:\$CLASSPATH
+        - export PATH=\$JAVA_HOME/bin:\$PATH
+    - name: NTP sync
+      shell: ntpdate cn.pool.ntp.org
+    - name: Close firewalld
+      shell: systemctl stop firewalld && systemctl disable firewalld
+    - name: Change SELINUX
+      shell: sed -i "s/enforcing/disabled/g" /etc/selinux/config && setenforce 0
+
+# 如果已经删除了系统自带的jdk可能会报错

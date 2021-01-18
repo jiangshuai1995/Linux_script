@@ -1,0 +1,7 @@
+- name: config ssh 
+  hosts: ssh
+  # 互信用户
+  user: root
+  tasks:
+   - name: ssh-copy
+     authorized_key: user=root key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"

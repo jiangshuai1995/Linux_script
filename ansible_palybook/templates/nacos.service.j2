@@ -1,0 +1,12 @@
+ [Unit]Description=nacos
+ After=network.target
+
+[Service]
+Type=forking
+ExecStart=/opt/clouddata/modules/nacos/bin/startup.sh-m standalone
+ExecReload=/opt/clouddata/modules/nacos/bin/shutdown.sh
+ExecStop=/opt/clouddata/modules/nacos/bin/shutdown.sh
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
