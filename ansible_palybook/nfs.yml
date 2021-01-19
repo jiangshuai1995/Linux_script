@@ -1,0 +1,34 @@
+- name: Configure nfs server
+  hosts: nfs_server
+  user: root
+  tasks:
+    - name: create nfs shared dir
+      shell: mkdir /nfsFile
+    - name:  grant privilege
+      shell: chmod -Rf 777 /nfsFile
+    - name: add line to /etc/exports
+      lineinfile:
+        dest: /etc/exports
+        line: '/nfsFile {{item}}(rw,sync,root_squash)'
+      with_items: "{{ groups['nfs_client'] }}"
+    - name: boot start rpcbind
+      service: name=rpcbind state=started
+    - name: enable rpcbind
+      shell: systemctl enable rpcbind
+    - name: boot start nfs
+      service: name=nfs-server state=started
+    - name: enable nfs-server
+      shell: systemctl enable nfs-server
+- name: Configure nfs client
+  hosts: nfs_client
+  user: root
+  tasks:
+    - name: create nfs dir
+      shell: mkdir /nfsFile
+    - name: add line to /etc/fstab
+      lineinfile:
+        dest: /etc/fstab
+        line: '{{item}}:/nfsFile /nfsFile nfs defaults 0 0'
+      with_items: "{{ groups['nfs_server'] }}"
+    - name: mount
+      shell: mount -a
