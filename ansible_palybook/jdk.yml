@@ -16,8 +16,13 @@
       shell: ntpdate cn.pool.ntp.org
     - name: Close firewalld
       shell: systemctl stop firewalld && systemctl disable firewalld
-    - name: once Change selinux
+    - name: test
+      shell: getenforce
+      register: selinux
+    - debug: var=selinux
+    - name: setenforce
       shell: setenforce 0
+      when: selinux.stdout != "Disabled"
     - name: Change SELINUX
       lineinfile: 
         dest: /etc/selinux/config

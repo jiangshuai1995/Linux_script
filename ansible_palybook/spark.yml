@@ -1,0 +1,26 @@
+- name: Configure webserver with Hadoop
+  hosts: hadoop_master,hadoop_slave
+  tasks:
+    - name: copy spark
+      unarchive: src=files/spark-3.0.0-bin-hadoop3.2.tgz dest=/opt/clouddata/modules
+    - name: hive config
+      shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
+      with_items:
+        - export SPARK_HOME=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2
+        - export SPARK_CONF_DIR=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf
+        - export PATH=\$PATH:\$SPARK_HOME/bin
+    - name: config spark-env.sh
+      template: src=template/spark-env.sh.j2 dest=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/spark-env.sh
+    - name: config slaves
+      template: src=template/slaves.j2 dest=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/slaves
+    - name: config spark-defaults.conf
+      template: src=template/spark-defaults.conf.j2 dest=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/spark-defaults.conf
+    - name: config  core-site.xml
+      shell: cp  /opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/core-site.xml    /opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/core-site.xml
+    - name: config  hive-site.xml 
+      shell: cp /opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-site.xml  /opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/hive-site.xml
+- name: boot spark
+  hosts: hadoop_master
+  tasks:
+    - name: boot spark
+      shell: chdir=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/sbin ./start-all.sh

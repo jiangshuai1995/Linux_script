@@ -1,0 +1,39 @@
+- name: Configure webserver with Hadoop
+  hosts: hive
+  tasks:
+    - name: copy hive
+      unarchive: src=files/apache-hive-3.1.2-bin.tar.gz dest=/opt/clouddata/modules
+    - name: hive config
+      shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
+      with_items:
+        - export HIVE_HOME=/opt/clouddata/modules/apache-hive-3.1.2-bin
+        - export HIVE_CONF_DIR=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf
+        - export PATH=\$PATH:\$HIVE_HOME/bin
+    - name: create hdfs tmp dir 
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -mkdir -p /user/hive/tmp
+    - name: create hdfs warehouse dir 
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -mkdir -p /user/hive/warehouse
+    - name: chmod hdfs tmp dir
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chomd 777 /user/hive/tmp
+    - name: chmod hdfs warehouse dir
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chomd 777 /user/hive/warehouse
+    - name: create logs dir
+      shell: mkdir -p /opt/clouddata/modules/apache-hive-3.1.2-bin/logs
+    - name: copy hive-log4j2.properties
+      copy: src=templates/hive-log4j2.properties dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-log4j2.properties
+    - name: copy hive-en.sh
+      copy: src=templates/hive-en.sh dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-en.sh
+    - name: config  hive-site.xml 
+      template:  src=templates/hive-site.xml.j2 dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-site.xml
+    - name: copy mysql jar
+      copy: src=files/mysql-connector-java-5.1.47.jar dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/lib
+    - name: copy guava jar
+      copy: src=files/guava-27.0-jre.jar dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/lib
+    - name: rm old guava jar
+      shell: rm -rf /opt/clouddata/modules/apache-hive-3.1.2-bin/lib/guava-19.0.jar
+    - name: init Metastore
+      shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin ./schematool -dbType mysql -initSchema -verbose
+    - name: boot Metastore
+      shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service metastore --hiveconf hive.log.file=metastore.log &>> metastore.log &
+    - name: boot hiveserver2
+      shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service hiveserver2 --hiveconf hive.log.file=hiveserver2.log &>> hiveserver2.log &

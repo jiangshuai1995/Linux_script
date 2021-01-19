@@ -24,7 +24,7 @@
   </property>
   <property>
     <name>fs.default.name</name>
-    <value>hdfs://{{groups['hadoop_master']}}:9000</value>
+    <value>hdfs://{{groups['hadoop_master']|first}}:9000</value>
   </property>
   <!--集成 hive-->
   <property>

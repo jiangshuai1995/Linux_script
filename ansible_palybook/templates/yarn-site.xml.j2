@@ -17,7 +17,7 @@
   <!--config address for resourceManager-->
   <property>
     <name>yarn.resourcemanager.hostname</name>
-    <value>{{groups['hadoop_master']}}</value>
+    <value>{{groups['hadoop_master']|first}}</value>
   </property>
   <!--config the method that reducer get data -->
   <property>
@@ -28,4 +28,31 @@
     <name>yarn.nodemanager.local-dirs</name>
     <value>/opt/clouddata/modules/hadoop-3.2.1/yarn</value>
   </property>
+  <property>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>{{ Men.stdout * 0.8 }}</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+  <value>{{ vcores.stdout }}</value>
+  </property>
+  <!-- 分配给容器的最小最大内存容量及虚拟核数量 -->
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>1024</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.maximum-allocation-mb</name>
+    <value>4192</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.minimum-allocation-vcores</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.maximum-allocation-vcores</name>
+    <value>4</value>
+  </property>
+
+
 </configuration>

@@ -30,12 +30,12 @@
   <!-- config secondary namenode -->
   <property>
     <name>dfs.namenode.secondary.http-address</name>
-    <value>{{secondary_node}}:50090</value>
+    <value>{{groups['hadoop_master']|first }}:50090</value>
   </property>
   <!-- config replica 数量 （节点个数 - 1） -->
   <property>
     <name>dfs.replication</name>
-    <value>{{replica}}</value>
+    <value>{{groups['hadoop_master']|length + groups['hadoop_master']|length - 1  }}</value>
   </property>
   <property>
     <name>dfs.permissions</name>

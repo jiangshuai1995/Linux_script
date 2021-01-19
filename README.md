@@ -5,4 +5,4 @@ record some linux-scripts
   TODO nacos的配置文件
 
 
-hdfs-site 模板存在问题
+mysql中需要创建名为hive的数据库 ## 不知道hive能否自动创建

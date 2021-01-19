@@ -7,8 +7,8 @@
       shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
       with_items:
         - export HADOOP_HOME=/opt/clouddata/modules/hadoop-3.2.1
-        - export HADOOP_CONF_DIR=${HADOOP_HOME}/etc/hadoop
-        - export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+        - export HADOOP_CONF_DIR=\$HADOOP_HOME/etc/hadoop
+        - export PATH=\$PATH:\$HADOOP_HOME/bin:\$HADOOP_HOME/sbin
     - name: config core-site.xml
       template: src=templates/core-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/core-site.xml
     - name: config hdfs-site.xml 
@@ -17,25 +17,35 @@
       template: src=templates/hadoop-env.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/hadoop-env.sh
     - name: config mapred-site.xml
       template: src=template/mapred-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/mapred-site.xml
+    - name: test Mem
+      shell: free -m |grep Mem|awk '{print $2}'
+      register: Mem
+    - debug: var=Mem
+    - name: test vcores
+      shell: cat /proc/cpuinfo| grep "processor"| wc –l
+      register: vcores
+    - debug: var=vcores
     - name: config yarn-site.xml
       template: src=template/yarn-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/yarn-site.xml
     - name: config workers
       template: src=templates/workers.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/workers
+    - name: copy capacity-scheduler.xml
+      copy: src=template/capacity-scheduler.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/capacity-scheduler.xml
     - name: copy start-dfs.sh
-      templates: src=templates/start-dfs.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/start-dfs.sh
+      copy: src=templates/start-dfs.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/start-dfs.sh
     - name: copy stop-dfs.sh
-      templates: src=templates/stop-dfs.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/stop-dfs.sh
+      copy: src=templates/stop-dfs.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/stop-dfs.sh
     - name: copy start-yarn.sh
-      templates: src=templates/start-yarn.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/start-yarn.sh
+      copy: src=templates/start-yarn.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/start-yarn.sh
     - name: copy stop-yarn.sh
-      templates: src=templates/stop-yarn.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/stop-yarn.sh
+      copy: src=templates/stop-yarn.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/stop-yarn.sh
 
 - name: boot Hadoop
   hosts: hadoop_master
   tasks: 
     - name: format namenode
-    - command: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  hdfs namenode -format
+      command: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  hdfs namenode -format
     - name: boot hdfs
-    - shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin sh start-dfs.sh
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin sh start-dfs.sh
     - name: boot yarn
-    - shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin sh start-yarn.sh
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin sh start-yarn.sh

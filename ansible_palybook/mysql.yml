@@ -1,0 +1,17 @@
+- name: Configure webserver with mysql
+  hosts: mysql
+  tasks:
+    - name: copy mysql
+      unarchive: src=files/mysql-centos7.2.tar.gz dest=/opt/modules
+    - name:  install script
+      command: chdir=/opt/modules/mysql-centos7.2 sh run.sh
+    - name: config my.cnf
+      copy: src=templates/my.cnf  dest=/etc/my.cnf
+      notify: restart mysql
+    - name: shell
+      shell: mysqladmin -u root password "123456"
+    - name: yuancheng
+      shell: mysql -uroot -p123456 -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456';flush privileges;"  -D mysql
+  handlers:
+    - name: restart mysql
+      service: name=mysql state=restarted
