@@ -33,7 +33,13 @@
       shell: rm -rf /opt/clouddata/modules/apache-hive-3.1.2-bin/lib/guava-19.0.jar
     - name: init Metastore
       shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin ./schematool -dbType mysql -initSchema -verbose
+      environment:
+        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1/bin
     - name: boot Metastore
       shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service metastore --hiveconf hive.log.file=metastore.log &>> metastore.log &
+      environment:
+        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1/bin
     - name: boot hiveserver2
       shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service hiveserver2 --hiveconf hive.log.file=hiveserver2.log &>> hiveserver2.log &
+      environment:
+        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1/bin
