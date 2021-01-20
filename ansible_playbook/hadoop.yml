@@ -16,7 +16,7 @@
     - name: config hadoop-env.sh
       template: src=templates/hadoop-env.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/hadoop-env.sh
     - name: config mapred-site.xml
-      template: src=template/mapred-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/mapred-site.xml
+      template: src=templates/mapred-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/mapred-site.xml
     - name: test Mem
       shell: free -m |grep Mem|awk '{print $2}'
       register: Mem
@@ -26,11 +26,11 @@
       register: vcores
     - debug: var=vcores
     - name: config yarn-site.xml
-      template: src=template/yarn-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/yarn-site.xml
+      template: src=templates/yarn-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/yarn-site.xml
     - name: config workers
       template: src=templates/workers.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/workers
     - name: copy capacity-scheduler.xml
-      copy: src=template/capacity-scheduler.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/capacity-scheduler.xml
+      copy: src=templates/capacity-scheduler.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/capacity-scheduler.xml
     - name: copy start-dfs.sh
       copy: src=templates/start-dfs.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/start-dfs.sh
     - name: copy stop-dfs.sh
