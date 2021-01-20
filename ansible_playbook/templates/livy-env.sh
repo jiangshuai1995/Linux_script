@@ -31,3 +31,6 @@
 # - LIVY_MAX_LOG_FILES Max number of log file to keep in the log directory. (Default: 5.)
 # - LIVY_NICENESS   Niceness of the Livy server process when running in the background. (Default: 0.)
 # - LIVY_CLASSPATH  Override if the additional classpath is required.
+
+export SPARK_HOME=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2
+export HADOOP_CONF_DIR=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop
