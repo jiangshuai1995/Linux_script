@@ -11,7 +11,7 @@
   </property>
   <property>
     <name>hive.metastore.uris</name>
-    <value>thrift://{{ansible_default_ipv4['address']}}:9083</value>
+    <value>thrift://{{groups['hive']|first}}:9083</value>
   </property>
   <property>
     <name>javax.jdo.option.ConnectionDriverName</name>
@@ -32,7 +32,7 @@
 
   <property>
     <name>hive.server2.thrift.bind.host</name>
-    <value>{{ansible_default_ipv4['address']}}</value>
+    <value>{{groups['hive']|first}}</value>
   </property>
   <property>
     <name>hive.server2.thrift.port</name>

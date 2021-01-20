@@ -1,8 +1,9 @@
-- name: Configure webserver with nginx
+- name: Configure webserver with General
   hosts: all
   tasks:
     - name: delete system jdk noarch
       shell: rpm -qa | grep java |grep -v  ".noarch" |xargs -l -t rpm -e --nodeps
+      ignore_errors: yes
     - name:  copy jdk-8u271-linux-x64.tar.gz remote hosts
       unarchive: src=files/jdk-8u271-linux-x64.tar.gz dest=/opt/clouddata/modules/
     - name: java_profile config
@@ -14,6 +15,7 @@
         - export PATH=\$JAVA_HOME/bin:\$PATH
     - name: NTP sync
       shell: ntpdate cn.pool.ntp.org
+      ignore_errors: yes
     - name: Close firewalld
       shell: systemctl stop firewalld && systemctl disable firewalld
     - name: test

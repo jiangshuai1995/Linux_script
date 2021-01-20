@@ -1,4 +1,4 @@
-- name: Configure webserver with Hadoop
+- name: Configure webserver with hive
   hosts: hive
   tasks:
     - name: copy hive
@@ -14,15 +14,15 @@
     - name: create hdfs warehouse dir 
       shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -mkdir -p /user/hive/warehouse
     - name: chmod hdfs tmp dir
-      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chomd 777 /user/hive/tmp
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chmod 777 /user/hive/tmp
     - name: chmod hdfs warehouse dir
-      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chomd 777 /user/hive/warehouse
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chmod 777 /user/hive/warehouse
     - name: create logs dir
       shell: mkdir -p /opt/clouddata/modules/apache-hive-3.1.2-bin/logs
     - name: copy hive-log4j2.properties
       copy: src=templates/hive-log4j2.properties dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-log4j2.properties
-    - name: copy hive-en.sh
-      copy: src=templates/hive-en.sh dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-en.sh
+    - name: copy hive-env.sh
+      copy: src=templates/hive-env.sh dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-en.sh
     - name: config  hive-site.xml 
       template:  src=templates/hive-site.xml.j2 dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-site.xml
     - name: copy mysql jar

@@ -6,14 +6,14 @@
     - name: copy kafka
       unarchive: src=files/kafka_2.13-2.4.0.tgz dest=/opt/clouddata/modules
     - name:  modify kafka server.properties
-      template: src=server.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/server.properties
+      template: src=templates/server.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/server.properties
     - name:  modify kafka zookeeper.properties
-      template: src=zookeeper.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/zookeeper.properties
+      template: src=templates/zookeeper.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/zookeeper.properties
     - name:  config zookeeper service
-      template: src=zookeeper.service.j2 dest=/etc/systemd/system/zookeeper.service
+      template: src=templates/zookeeper.service.j2 dest=/etc/systemd/system/zookeeper.service
       notify: restart zookeeper
     - name:  config kafka service
-      template: src=kafka.service.j2 dest=/etc/systemd/system/kafka.service
+      template: src=templates/kafka.service.j2 dest=/etc/systemd/system/kafka.service
       notify: restart kafka
     - name:  boot zookeeper service
       service: name=zookeeper state=started

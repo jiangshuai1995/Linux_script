@@ -13,10 +13,12 @@
     with_items:
     - { name: 'clouddata', chpass: '123456' }
 
-
-- name: Configure webserver with nginx
+- name: Configure webserver with General
   hosts: all
   tasks:
+    - name: delete system jdk noarch
+      shell: rpm -qa | grep java |grep -v  ".noarch" |xargs -l -t rpm -e --nodeps
+      ignore_errors: yes
     - name:  copy jdk-8u271-linux-x64.tar.gz remote hosts
       unarchive: src=files/jdk-8u271-linux-x64.tar.gz dest=/opt/clouddata/modules/
     - name: java_profile config
@@ -26,6 +28,9 @@
         - export JRE_HOME=/opt/clouddata/modules/jdk1.8.0_271/jre
         - export CLASSPATH=.:\$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:\$JRE_HOME/lib:\$CLASSPATH
         - export PATH=\$JAVA_HOME/bin:\$PATH
+    - name: NTP sync
+      shell: ntpdate cn.pool.ntp.org
+      ignore_errors: yes
     - name: Close firewalld
       shell: systemctl stop firewalld && systemctl disable firewalld
     - name: test
@@ -41,15 +46,228 @@
         regexp: '^SELINUX='
         line: '^SELINUX=disable'
 
-- name: Configure webserver with nginx
-  hosts: nginx
+- name: Configure webserver with mysql
+  hosts: mysql
   tasks:
-    - name: copy nginx
-      unarchive: src=files/nginx-1.16.1.tar dest=/opt/clouddata/modules/
-    - name: config nginx service
-      template: src=nginx.service.j2 dest=/etc/systemd/system/nginx.service
-    - name: config nginx.conf
-      template: src=nginx.conf.j2 dest=/opt/clouddata/modules/nginx/conf/nginx.conf
-    - name: boot start nginx
-      service: name=nginx state=started
+    - name: copy mysql
+      unarchive: src=files/mysql-centos7.2.tar.gz dest=/opt/clouddata/modules
+    - name:  install script
+      command: chdir=/opt/clouddata/modules/mysql-centos7.2 sh run.sh
+    - name: config my.cnf
+      copy: src=templates/my.cnf  dest=/etc/my.cnf
+      notify: restart mysql
+    - name: shell
+      shell: mysqladmin -u root password "123456"
+    - name: yuancheng
+      shell: mysql -uroot -p123456 -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456';flush privileges;"  -D mysql
+  handlers:
+    - name: restart mysql
+      service: name=mysql state=restarted
+
+- name: Configure webserver with kafka
+  hosts: kafka
+  vars: 
+    kafka_dir: "kafka_2.13-2.4.0"
+  tasks:
+    - name: copy kafka
+      unarchive: src=files/kafka_2.13-2.4.0.tgz dest=/opt/clouddata/modules
+    - name:  modify kafka server.properties
+      template: src=templates/server.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/server.properties
+    - name:  modify kafka zookeeper.properties
+      template: src=templates/zookeeper.properties.j2 dest=/opt/clouddata/modules/{{kafka_dir}}/config/zookeeper.properties
+    - name:  config zookeeper service
+      template: src=templates/zookeeper.service.j2 dest=/etc/systemd/system/zookeeper.service
+      notify: restart zookeeper
+    - name:  config kafka service
+      template: src=templates/kafka.service.j2 dest=/etc/systemd/system/kafka.service
+      notify: restart kafka
+    - name:  boot zookeeper service
+      service: name=zookeeper state=started
+    - name:  boot kafka service
+      service: name=kafka state=started
+  handlers:
+    - name: restart zookeeper
+      service: name=zookeeper state=restarted
+    - name: restart kafka
+      service: name=kafka state=restarted
+
+- name: Configure webserver with nacos
+  hosts: nacos
+  vars:
+    nacos_dir: "nacos"
+  tasks:
+    - name: copy nacos
+      unarchive: src=files/nacos-server-1.1.4.tar.gz dest=/opt/clouddata/modules
+    - name:  config nacos service
+      template: src=templates/nacos.service.j2 dest=/etc/systemd/system/nacos.service
+    - name: boot nacos service
+      service: name=nacos state=started
+
+- name: Configure webserver with Hadoop
+  hosts: hadoop_master,hadoop_slave
+  tasks:
+    - name: cpoy hadoop
+      unarchive: src=files/hadoop-3.2.1.tar.gz dest=/opt/clouddata/modules
+    - name: hadoop_profile config
+      shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
+      with_items:
+        - export HADOOP_HOME=/opt/clouddata/modules/hadoop-3.2.1
+        - export HADOOP_CONF_DIR=\$HADOOP_HOME/etc/hadoop
+        - export PATH=\$PATH:\$HADOOP_HOME/bin:\$HADOOP_HOME/sbin
+    - name: config core-site.xml
+      template: src=templates/core-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/core-site.xml
+    - name: config hdfs-site.xml 
+      template: src=templates/hdfs-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/hdfs-site.xml
+    - name: config hadoop-env.sh
+      template: src=templates/hadoop-env.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/hadoop-env.sh
+    - name: config mapred-site.xml
+      template: src=templates/mapred-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/mapred-site.xml
+    - name: test Mem
+      shell: free -m |grep Mem|awk '{print $2}'
+      register: Mem
+    - debug: var=Mem
+    - name: test vcores
+      shell: cat /proc/cpuinfo| grep "processor"| wc -l
+      register: vcores
+    - debug: var=vcores
+    - name: config yarn-site.xml
+      template: src=templates/yarn-site.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/yarn-site.xml
+    - name: config workers
+      template: src=templates/workers.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/workers
+    - name: copy capacity-scheduler.xml
+      copy: src=templates/capacity-scheduler.xml.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/capacity-scheduler.xml
+    - name: copy start-dfs.sh
+      copy: src=templates/start-dfs.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/start-dfs.sh
+    - name: copy stop-dfs.sh
+      copy: src=templates/stop-dfs.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/stop-dfs.sh
+    - name: copy start-yarn.sh
+      copy: src=templates/start-yarn.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/start-yarn.sh
+    - name: copy stop-yarn.sh
+      copy: src=templates/stop-yarn.sh.j2 dest=/opt/clouddata/modules/hadoop-3.2.1/sbin/stop-yarn.sh
+
+- name: boot Hadoop
+  hosts: hadoop_master
+  tasks: 
+    - name: format namenode
+      command: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs namenode -format
+    - name: boot hdfs
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin ./start-dfs.sh
+    - name: boot yarn
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin ./start-yarn.sh
+
+- name: Configure webserver with hive
+  hosts: hive
+  tasks:
+    - name: copy hive
+      unarchive: src=files/apache-hive-3.1.2-bin.tar.gz dest=/opt/clouddata/modules
+    - name: hive config
+      shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
+      with_items:
+        - export HIVE_HOME=/opt/clouddata/modules/apache-hive-3.1.2-bin
+        - export HIVE_CONF_DIR=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf
+        - export PATH=\$PATH:\$HIVE_HOME/bin
+    - name: create hdfs tmp dir 
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -mkdir -p /user/hive/tmp
+    - name: create hdfs warehouse dir 
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -mkdir -p /user/hive/warehouse
+    - name: chmod hdfs tmp dir
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chmod 777 /user/hive/tmp
+    - name: chmod hdfs warehouse dir
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs dfs -chmod 777 /user/hive/warehouse
+    - name: create logs dir
+      shell: mkdir -p /opt/clouddata/modules/apache-hive-3.1.2-bin/logs
+    - name: copy hive-log4j2.properties
+      copy: src=templates/hive-log4j2.properties dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-log4j2.properties
+    - name: copy hive-env.sh
+      copy: src=templates/hive-env.sh dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-en.sh
+    - name: config  hive-site.xml 
+      template:  src=templates/hive-site.xml.j2 dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/conf/hive-site.xml
+    - name: copy mysql jar
+      copy: src=files/mysql-connector-java-5.1.47.jar dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/lib
+    - name: copy guava jar
+      copy: src=files/guava-27.0-jre.jar dest=/opt/clouddata/modules/apache-hive-3.1.2-bin/lib
+    - name: rm old guava jar
+      shell: rm -rf /opt/clouddata/modules/apache-hive-3.1.2-bin/lib/guava-19.0.jar
+    - name: init Metastore
+      shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin ./schematool -dbType mysql -initSchema -verbose
+    - name: boot Metastore
+      shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service metastore --hiveconf hive.log.file=metastore.log &>> metastore.log &
+    - name: boot hiveserver2
+      shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service hiveserver2 --hiveconf hive.log.file=hiveserver2.log &>> hiveserver2.log &
+
+- name: Configure webserver with spark
+  hosts: hadoop_master,hadoop_slave
+  tasks:
+    - name: copy spark
+      unarchive: src=files/spark-3.0.0-bin-hadoop3.2.tgz dest=/opt/clouddata/modules
+    - name: hive config
+      shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
+      with_items:
+        - export SPARK_HOME=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2
+        - export SPARK_CONF_DIR=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf
+        - export PATH=\$PATH:\$SPARK_HOME/bin
+    - name: config spark-env.sh
+      template: src=templates/spark-env.sh.j2 dest=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/spark-env.sh
+    - name: config slaves
+      template: src=templates/slaves.j2 dest=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/slaves
+    - name: config spark-defaults.conf
+      template: src=templates/spark-defaults.conf.j2 dest=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/spark-defaults.conf
+    - name: config  core-site.xml
+      shell: cp  /opt/clouddata/modules/hadoop-3.2.1/etc/hadoop/core-site.xml    /opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/core-site.xml
+    - name: config  hive-site.xml 
+      template: src=templates/hive-site.xml.j2 dest=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/conf/spark-defaults.conf
+
+- name: boot spark
+  hosts: hadoop_master
+  tasks:
+    - name: boot spark
+      shell: chdir=/opt/clouddata/modules/spark-3.0.0-bin-hadoop3.2/sbin ./start-all.sh
+
+- name: Configure webserver with livy
+  hosts: livy
+  tasks:
+    - name: copy livy
+      unarchive: src=files/apache-livy-0.8.0-incubating-bin.zip dest=/opt/clouddata/modules
+    - name: copy livy conf 
+      copy: src=templates/livy.conf dest=/opt/clouddata/modules/apache-livy-0.8.0-incubating-bin/conf/livy.conf
+    - name: copy livy-env.sh
+      copy: src=templates/livy-env.sh dest=/opt/clouddata/modules/apache-livy-0.8.0-incubating-bin/conf/livy-env.sh
+    - name: boot livy server
+      shell: chdir=/opt/clouddata/modules/apache-livy-0.8.0-incubating-bin/bin  nohup sh livy-server start &
+
+- name: Configure nfs server
+  hosts: nfs_server
+  user: root
+  tasks:
+    - name: create nfs shared dir
+      shell: mkdir -p /opt/clouddate/nfsfile
+    - name:  grant privilege
+      shell: chmod -Rf 777 /opt/clouddate/nfsfile
+    - name: add line to /etc/exports
+      lineinfile:
+        dest: /etc/exports
+        line: '/opt/clouddate/nfsfile {{item}}(rw,sync,root_squash)'
+      with_items: "{{ groups['nfs_client'] }}"
+    - name: boot start rpcbind
+      service: name=rpcbind state=started
+    - name: enable rpcbind
+      shell: systemctl enable rpcbind
+    - name: boot start nfs
+      service: name=nfs-server state=started
+    - name: enable nfs-server
+      shell: systemctl enable nfs-server
+
+- name: Configure nfs client
+  hosts: nfs_client
+  user: root
+  tasks:
+    - name: create nfs dir
+      shell: mkdir -p /opt/clouddate/nfsfile
+    - name: add line to /etc/fstab
+      lineinfile:
+        dest: /etc/fstab
+        line: '{{item}}:/opt/clouddate/nfsfile /opt/clouddate/nfsfile nfs defaults 0 0'
+      with_items: "{{ groups['nfs_server'] }}"
+    - name: mount
+      shell: mount -a
 

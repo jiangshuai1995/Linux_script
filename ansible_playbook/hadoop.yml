@@ -44,8 +44,8 @@
   hosts: hadoop_master
   tasks: 
     - name: format namenode
-      command: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  hdfs namenode -format
+      command: chdir=/opt/clouddata/modules/hadoop-3.2.1/bin  ./hdfs namenode -format
     - name: boot hdfs
-      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin sh start-dfs.sh
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin ./start-dfs.sh
     - name: boot yarn
-      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin sh start-yarn.sh
+      shell: chdir=/opt/clouddata/modules/hadoop-3.2.1/sbin ./start-yarn.sh
