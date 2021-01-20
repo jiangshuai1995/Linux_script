@@ -3,13 +3,13 @@
   user: root
   tasks:
     - name: create nfs shared dir
-      shell: mkdir -p /opt/clouddate/nfsfile
+      shell: mkdir -p /opt/clouddata/nfsfile
     - name:  grant privilege
-      shell: chmod -Rf 777 /opt/clouddate/nfsfile
+      shell: chmod -Rf 777 /opt/clouddata/nfsfile
     - name: add line to /etc/exports
       lineinfile:
         dest: /etc/exports
-        line: '/opt/clouddate/nfsfile {{item}}(rw,sync,root_squash)'
+        line: '/opt/clouddata/nfsfile {{item}}(rw,sync,root_squash)'
       with_items: "{{ groups['nfs_client'] }}"
     - name: boot start rpcbind
       service: name=rpcbind state=started
@@ -24,11 +24,11 @@
   user: root
   tasks:
     - name: create nfs dir
-      shell: mkdir -p /opt/clouddate/nfsfile
+      shell: mkdir -p /opt/clouddata/nfsfile
     - name: add line to /etc/fstab
       lineinfile:
         dest: /etc/fstab
-        line: '{{item}}:/opt/clouddate/nfsfile /opt/clouddate/nfsfile nfs defaults 0 0'
+        line: '{{item}}:/opt/clouddata/nfsfile /opt/clouddata/nfsfile nfs defaults 0 0'
       with_items: "{{ groups['nfs_server'] }}"
     - name: mount
       shell: mount -a

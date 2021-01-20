@@ -191,15 +191,15 @@
     - name: init Metastore
       shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin ./schematool -dbType mysql -initSchema -verbose
       environment:
-        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1/bin
+        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1
     - name: boot Metastore
       shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service metastore --hiveconf hive.log.file=metastore.log &>> metastore.log &
       environment:
-        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1/bin
+        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1
     - name: boot hiveserver2
       shell: chdir=/opt/clouddata/modules/apache-hive-3.1.2-bin/bin  nohup ./hive --service hiveserver2 --hiveconf hive.log.file=hiveserver2.log &>> hiveserver2.log &
       environment:
-        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1/bin
+        HADOOP_HOME: /opt/clouddata/modules/hadoop-3.2.1
 
 - name: Configure webserver with spark
   hosts: hadoop_master,hadoop_slave
@@ -246,13 +246,13 @@
   user: root
   tasks:
     - name: create nfs shared dir
-      shell: mkdir -p /opt/clouddate/nfsfile
+      shell: mkdir -p /opt/clouddata/nfsfile
     - name:  grant privilege
-      shell: chmod -Rf 777 /opt/clouddate/nfsfile
+      shell: chmod -Rf 777 /opt/clouddata/nfsfile
     - name: add line to /etc/exports
       lineinfile:
         dest: /etc/exports
-        line: '/opt/clouddate/nfsfile {{item}}(rw,sync,root_squash)'
+        line: '/opt/clouddata/nfsfile {{item}}(rw,sync,root_squash)'
       with_items: "{{ groups['nfs_client'] }}"
     - name: boot start rpcbind
       service: name=rpcbind state=started
@@ -268,11 +268,11 @@
   user: root
   tasks:
     - name: create nfs dir
-      shell: mkdir -p /opt/clouddate/nfsfile
+      shell: mkdir -p /opt/clouddata/nfsfile
     - name: add line to /etc/fstab
       lineinfile:
         dest: /etc/fstab
-        line: '{{item}}:/opt/clouddate/nfsfile /opt/clouddate/nfsfile nfs defaults 0 0'
+        line: '{{item}}:/opt/clouddata/nfsfile /opt/clouddata/nfsfile nfs defaults 0 0'
       with_items: "{{ groups['nfs_server'] }}"
     - name: mount
       shell: mount -a
