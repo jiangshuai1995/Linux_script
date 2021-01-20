@@ -22,7 +22,7 @@
       register: Mem
     - debug: var=Mem
     - name: test vcores
-      shell: cat /proc/cpuinfo| grep "processor"| wc –l
+      shell: cat /proc/cpuinfo| grep "processor"| wc -l
       register: vcores
     - debug: var=vcores
     - name: config yarn-site.xml

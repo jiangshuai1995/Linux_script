@@ -2,9 +2,9 @@
   hosts: mysql
   tasks:
     - name: copy mysql
-      unarchive: src=files/mysql-centos7.2.tar.gz dest=/opt/modules
+      unarchive: src=files/mysql-centos7.2.tar.gz dest=/opt/clouddata/modules
     - name:  install script
-      command: chdir=/opt/modules/mysql-centos7.2 sh run.sh
+      command: chdir=/opt/clouddata/modules/mysql-centos7.2 sh run.sh
     - name: config my.cnf
       copy: src=templates/my.cnf  dest=/etc/my.cnf
       notify: restart mysql

@@ -1,8 +1,22 @@
+- name: config ssh 
+  hosts: all
+  user: root
+  tasks:
+   - name: ssh-copy
+     authorized_key: user=root key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+- name: Add user
+  hosts: all
+  tasks:
+  - name: create user
+    user: name={{ item.name }} password={{ item.chpass | password_hash('sha512') }}  update_password=always
+    with_items:
+    - { name: 'clouddata', chpass: '123456' }
+
+
 - name: Configure webserver with nginx
   hosts: all
   tasks:
-    - name: delete system jdk noarch
-      shell: rpm -qa | grep java |grep -v  ".noarch" |xargs -l -t rpm -e --nodeps
     - name:  copy jdk-8u271-linux-x64.tar.gz remote hosts
       unarchive: src=files/jdk-8u271-linux-x64.tar.gz dest=/opt/clouddata/modules/
     - name: java_profile config
@@ -12,8 +26,6 @@
         - export JRE_HOME=/opt/clouddata/modules/jdk1.8.0_271/jre
         - export CLASSPATH=.:\$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:\$JRE_HOME/lib:\$CLASSPATH
         - export PATH=\$JAVA_HOME/bin:\$PATH
-    - name: NTP sync
-      shell: ntpdate cn.pool.ntp.org
     - name: Close firewalld
       shell: systemctl stop firewalld && systemctl disable firewalld
     - name: test
@@ -28,3 +40,16 @@
         dest: /etc/selinux/config
         regexp: '^SELINUX='
         line: '^SELINUX=disable'
+
+- name: Configure webserver with nginx
+  hosts: nginx
+  tasks:
+    - name: copy nginx
+      unarchive: src=files/nginx-1.16.1.tar dest=/opt/clouddata/modules/
+    - name: config nginx service
+      template: src=nginx.service.j2 dest=/etc/systemd/system/nginx.service
+    - name: config nginx.conf
+      template: src=nginx.conf.j2 dest=/opt/clouddata/modules/nginx/conf/nginx.conf
+    - name: boot start nginx
+      service: name=nginx state=started
+
