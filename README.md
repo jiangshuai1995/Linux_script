@@ -6,3 +6,4 @@ record some linux-scripts
 
 
 mysql中需要创建名为hive的数据库 ## 不知道hive能否自动创建
+yarn中的资源配置问题
