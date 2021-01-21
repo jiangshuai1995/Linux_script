@@ -16,6 +16,8 @@
 - name: Configure webserver with General
   hosts: all
   tasks:
+    - name: create clouddata
+      shell: mkdir -p /opt/clouddata/modules
     - name: delete system jdk noarch
       shell: rpm -qa | grep java |grep -v  ".noarch" |xargs -l -t rpm -e --nodeps
       ignore_errors: yes
