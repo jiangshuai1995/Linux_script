@@ -1,0 +1,63 @@
+# 生产环境
+
+# 服务器配置
+server:
+  # 服务器的HTTP端口。
+  port: 5187
+  code: MTI3LjAuMC4x
+
+# Spring 配置
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: DataAccess-Engine
+  output:
+    ansi:
+      # 开启彩色日志
+      enabled: always
+# Dubbo 配置
+dubbo:
+  registry:
+    # 注册中心地址
+    address: nacos://{{groups['nacos']|first}}:8848
+    # 启动时检查注册中心
+    check: false
+  scan:
+    # 扫描Services注解
+    base-packages: com.dataaccess.provider
+  protocols:
+    dubbo:
+      # 以dubbo协议暴露
+      name: dubbo
+      port: -1
+  consumer:
+    # 启动时检查provider服务是否可用
+    check: false
+    # 订阅具有指定gv的服务
+    group: dubbo
+    version: 1.0.0
+  provider:
+    # 重试
+    retries: 0
+    # 消费超时时间
+    timeout: 20000
+    # 暴露具有指定gv的服务
+    group: dubbo
+    version: 1.0.0
+  application:
+    qos-enable: false
+
+#kafka认证配置
+auth:
+  authFlag: false
+#  confRootPath: D:\kafka_config\
+  confRootPath: /home/zafk-message/kafka_conf/
+  krb5File: krb5.conf
+  userKeyFile: user.keytab
+  userKey: lkzafk_jj
+
+#debezium文件存储路径
+debezium:
+  storageFilePath: /home/debeziumFile/storage
+  historyFilePath: /home/debeziumFile/history

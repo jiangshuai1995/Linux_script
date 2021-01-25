@@ -1,0 +1,26 @@
+- name: Configure webserver with UNI-DATA
+  hosts: server
+  tasks:
+    - name: create dir
+      shell: mkdir -p /opt/clouddata/Data_platform
+    - name: cpoy DataRestful
+      unarchive: src=files/UNI-DataRestful.zip dest=/opt/clouddata/Data_platform/
+    - name: cpoy DataServer
+      unarchive: src=files/UNI-DataServer.zip dest=/opt/clouddata/Data_platform/
+    - name: cpoy DataAccess
+      unarchive: src=files/UNI-DataAccess.zip dest=/opt/clouddata/Data_platform/
+    - name: copy dist
+      unarchive: src=files/dist.zip dest=/opt/clouddata/Data_platform/
+    - name: config  restful  application-produce.yml
+      template: templates/application-produce.yml.restful.j2 dest=/home/clouddata/Data_platform/UNI-DataRestful/resources/application-produce.yml
+    - name: config  server  application-produce.yml
+      template: templates/application-produce.yml.server.j2 dest=/home/clouddata/Data_platform/UNI-DataServer/resources/application-produce.yml
+    - name: config  access  application-produce.yml
+      template: templates/application-produce.yml.access.j2 dest=/home/clouddata/Data_platform/UNI-DataAccess/resources/application-produce.yml
+    - name: boot server
+      shell: chdir=/home/clouddata/Data_platform/UNI-DataServer/bin ./startServer.sh
+    - name: boot restful
+      shell: chdir=/home/clouddata/Data_platform/UNI-DataRestful/bin ./startServer.sh
+    - name: boot access
+      shell: chdir=/home/clouddata/Data_platform/UNI-DataAccess/bin ./startServer.sh
+    
