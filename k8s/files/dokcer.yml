@@ -1,0 +1,24 @@
+- name: Configure and install docker
+  hosts: docker
+  tasks:
+    - name: cp docker
+      unarchive: src=files/docker-19.03.7.tgz dest=/opt
+    - name: cp executable
+      shell: cp /opt/docker/* /usr/bin/
+      ignore_errors: yes
+    - name: mkdir /etc/docker
+      command: mkdir -p /etc/docker
+    - name: config daemon.json
+      template: src=templates/daemon.json.j2 dest=/etc/docker/daemon.json
+    - name:  config docker service
+      template: src=docker.service.j2 dest=/etc/systemd/system/docker.service
+      notify: reload service
+    - name: boot docker service
+      service: name=docker state=restarted
+  handlers:
+    - name: reload service
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: docker
+        enabled: True

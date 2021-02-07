@@ -1,0 +1,65 @@
+- name: Configure and install kubernetes
+  hosts: kubernetes,kubernetes
+  tasks:
+    - name: test
+      shell: getenforce
+      register: selinux
+    - debug: var=selinux
+    - name: setenforce
+      shell: setenforce 0
+      when: selinux.stdout != "Disabled"
+    - name: Change SELINUX
+      lineinfile: 
+        dest: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: '^SELINUX=disable'
+    - name: close swap
+      shell: swapoff -a
+    - name: config /etc/fstab
+      shell: sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+    - name: Close firewalld
+      shell: systemctl stop firewalld && systemctl disable firewalld
+    - name: config /etc/sysctl.d/kubernetes.conf
+      template: src=templates/kubernetes.conf.j2 dest=/etc/sysctl.d/kubernetes.conf
+    - name: sysctl -p kubernetes.conf
+      shell: sysctl -p /etc/sysctl.d/kubernetes.conf
+    - name: create log dir
+      shell: mkdir /var/log/journal
+    - name: create journald.conf.d
+      shell: mkdir /etc/systemd/journald.conf.d
+    - name: config log conf
+      template: src=templates/99-prophet.conf.j2 dest=/etc/systemd/journald.conf.d/99-prophet.conf
+    - name: restart systemd-journald
+      service: name=systemd-journald state=restarted
+    - name: load br_netfilter module
+      shell: modprobe br_netfilter
+    - name: config ipvs.modules
+      template: src=templates/ipvs.modules.j2 dest=/etc/sysconfig/modules/ipvs.modules
+    - name: chmod ipvs.modules
+      shell: chmod 755 /etc/sysconfig/modules/ipvs.modules
+    - name: bash ipvs.modules
+      command: bash /etc/sysconfig/modules/ipvs.modules
+    - name: mkdir k8s
+      shell: mkdir /opt/k8s
+      ignore_errors: yes
+    - name: cp flannel.tar.gz
+      unarchive: src=files/flannel.tar.gz dest=/opt/k8s/
+    - name: cp k8s-1.15.1-rpm.tar.gz
+      unarchive: src=files/k8s-1.15.1-rpm.tar.gz dest=/opt/k8s/
+    - name: cp kubeadm-basic.images.tar.gz
+      unarchive: src=files/kubeadm-basic.images.tar.gz dest=/opt/k8s/
+    - name: rpm install k8s
+      shell: chdir=/opt/k8s/k8s-1.15.1-rpm rpm -ivh *
+    - name: load images
+      shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input apiserver.tar
+    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input coredns.tar
+    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input etcd.tar
+    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input kubec-con-man.tar
+    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input pause.tar
+    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input proxy.tar
+    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input scheduler.tar
+    - name: install flannel
+      shell: chdir=/opt/k8s/flannel kubectl create -f flannel.yaml
+    
+
+    
