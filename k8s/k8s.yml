@@ -1,6 +1,24 @@
 - name: Configure and install kubernetes
-  hosts: kubernetes
+  hosts: kubernetes_master,kubernetes_slave
   tasks:
+    - name: yum
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - conntrack
+        - ntpdate
+        - ntp
+        - ipvsadm
+        - ipset
+        - jq
+        - iptables
+        - curl
+        - sysstat
+        - libseccomp
+        - wget
+        - vim
+        - net-tools
     - name: test
       shell: getenforce
       register: selinux
@@ -55,6 +73,19 @@
     - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input pause.tar
     - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input proxy.tar
     - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input scheduler.tar
+- name: Init kubernetes
+  hosts: kubernetes_master
+  tasks:
+    - name: init cluster
+      shell: kubeadm init --apiserver-advertise-address={{ansible_default_ipv4['address']}} --kubernetes-version v1.15.1 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16
+    - name: create .kube
+      file:
+        path: /root/.kube
+        state: directory
+    - name: cp admin.conf
+      shell: cp -i /etc/kubernetes/admin.conf /root/.kube/config
+    - name: chown config
+      shell: chown root:root /root/.kube/config
     - name: install flannel
       shell: chdir=/opt/kubernetes/flannel kubectl create -f flannel.yaml
     
