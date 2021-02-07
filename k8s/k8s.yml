@@ -39,27 +39,20 @@
       shell: chmod 755 /etc/sysconfig/modules/ipvs.modules
     - name: bash ipvs.modules
       command: bash /etc/sysconfig/modules/ipvs.modules
-    - name: mkdir k8s
-      shell: mkdir /opt/k8s
-      ignore_errors: yes
-    - name: cp flannel.tar.gz
-      unarchive: src=files/flannel.tar.gz dest=/opt/k8s/
-    - name: cp k8s-1.15.1-rpm.tar.gz
-      unarchive: src=files/k8s-1.15.1-rpm.tar.gz dest=/opt/k8s/
-    - name: cp kubeadm-basic.images.tar.gz
-      unarchive: src=files/kubeadm-basic.images.tar.gz dest=/opt/k8s/
+    - name: cp kubenetes.zip
+      unarchive: src=files/kubenetes.zip dest=/opt/
     - name: rpm install k8s
-      shell: chdir=/opt/k8s/k8s-1.15.1-rpm rpm -ivh *
+      shell: chdir=/opt/kubenetes/k8s-1.15.1-rpm rpm -ivh *
     - name: load images
-      shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input apiserver.tar
-    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input coredns.tar
-    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input etcd.tar
-    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input kubec-con-man.tar
-    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input pause.tar
-    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input proxy.tar
-    - shell: chdir=/opt/k8s/kubeadm-basic.images docker load --input scheduler.tar
+      shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input apiserver.tar
+    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input coredns.tar
+    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input etcd.tar
+    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input kubec-con-man.tar
+    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input pause.tar
+    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input proxy.tar
+    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input scheduler.tar
     - name: install flannel
-      shell: chdir=/opt/k8s/flannel kubectl create -f flannel.yaml
+      shell: chdir=/opt/kubenetes/flannel kubectl create -f flannel.yaml
     
 
     
