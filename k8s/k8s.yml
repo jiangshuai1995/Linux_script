@@ -1,5 +1,5 @@
 - name: Configure and install kubernetes
-  hosts: kubernetes,kubernetes
+  hosts: kubernetes
   tasks:
     - name: test
       shell: getenforce
@@ -39,20 +39,20 @@
       shell: chmod 755 /etc/sysconfig/modules/ipvs.modules
     - name: bash ipvs.modules
       command: bash /etc/sysconfig/modules/ipvs.modules
-    - name: cp kubenetes.zip
-      unarchive: src=files/kubenetes.zip dest=/opt/
+    - name: cp kubernetes.tar.gz
+      unarchive: src=files/kubernetes.tar.gz dest=/opt/
     - name: rpm install k8s
-      shell: chdir=/opt/kubenetes/k8s-1.15.1-rpm rpm -ivh *
+      shell: chdir=/opt/kubernetes/k8s-1.15.1-rpm rpm -ivh *
     - name: load images
-      shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input apiserver.tar
-    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input coredns.tar
-    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input etcd.tar
-    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input kubec-con-man.tar
-    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input pause.tar
-    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input proxy.tar
-    - shell: chdir=/opt/kubenetes/kubeadm-basic.images docker load --input scheduler.tar
+      shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input apiserver.tar
+    - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input coredns.tar
+    - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input etcd.tar
+    - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input kubec-con-man.tar
+    - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input pause.tar
+    - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input proxy.tar
+    - shell: chdir=/opt/kubernetes/kubeadm-basic.images docker load --input scheduler.tar
     - name: install flannel
-      shell: chdir=/opt/kubenetes/flannel kubectl create -f flannel.yaml
+      shell: chdir=/opt/kubernetes/flannel kubectl create -f flannel.yaml
     
 
     
