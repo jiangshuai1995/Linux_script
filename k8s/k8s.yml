@@ -91,11 +91,13 @@
     - name: create token
       shell: kubeadm token create
       register: token
+    - set_fact: token={{token.stdout}}
     - name: create sha
       shell: openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
       register: sha
+    - set_fact: sha={{sha.stdout}}
     - name: fetch admin.conf to source hosts
-      fetch: src=/etc/kubernetes/admin.conf dest=templates/admin.conf
+      fetch: src=/etc/kubernetes/admin.conf dest=templates/admin.conf flat=yes
 - name: Join kubernetes cluster
   hosts: kubernetes_slave
   tasks:
@@ -110,5 +112,5 @@
     - name: chown config
       shell: chown root:root /root/.kube/config
     - name: join cluster
-      shell: kubeadm join {{groups['kubernetes_master']|first}}:6443 --token {{token.stdout}} --discovery-token-ca-cert-hash sha256:{{sha.stdout}}
+      shell: kubeadm join {{groups['kubernetes_master']|first}}:6443 --token {{ hostvars[groups['kubernetes_master'][0]]['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars[groups['kubernetes_master'][0]]['sha'] }}
     
