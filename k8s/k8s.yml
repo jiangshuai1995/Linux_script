@@ -100,13 +100,13 @@
   hosts: kubernetes_slave
   tasks:
     - name: copy admin.conf
-      copy: src=templates/admin.conf dest=/etc/kubernetes/admin.conf
+      template: src=templates/admin.conf dest=/etc/kubernetes/admin.conf
     - name: create .kube
       file:
         path: /root/.kube
         state: directory
     - name: cp admin.conf to $HOME
-      shell: cp -i /etc/kubernetes/admin.conf /root/.kube/config
+      template: src=templates/admin.conf dest=/root/.kube/config
     - name: chown config
       shell: chown root:root /root/.kube/config
     - name: join cluster
