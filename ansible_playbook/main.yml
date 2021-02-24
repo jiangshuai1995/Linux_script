@@ -93,18 +93,6 @@
     - name: restart kafka
       service: name=kafka state=restarted
 
-- name: Configure webserver with nacos
-  hosts: nacos
-  vars:
-    nacos_dir: "nacos"
-  tasks:
-    - name: copy nacos
-      unarchive: src=files/nacos-server-1.1.4.tar.gz dest=/opt/clouddata/modules
-    - name:  config nacos service
-      template: src=templates/nacos.service.j2 dest=/etc/systemd/system/nacos.service
-    - name: boot nacos service
-      service: name=nacos state=started
-
 - name: Configure webserver with Hadoop
   hosts: hadoop_master,hadoop_slave
   tasks:
