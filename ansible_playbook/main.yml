@@ -47,7 +47,17 @@
         dest: /etc/selinux/config
         regexp: '^SELINUX='
         line: '^SELINUX=disable'
-
+- name: Configure webserver with nginx
+  hosts: nginx
+  tasks:
+    - name: copy nginx
+      unarchive: src=files/nginx-1.16.1.tar dest=/opt/clouddata/modules/
+    - name: config nginx service
+      template: src=nginx.service.j2 dest=/etc/systemd/system/nginx.service
+    - name: config nginx.conf
+      template: src=nginx.conf.j2 dest=/opt/clouddata/modules/nginx/conf/nginx.conf
+    - name: boot start nginx
+      service: name=nginx state=started
 - name: Configure webserver with mysql
   hosts: mysql
   tasks:
