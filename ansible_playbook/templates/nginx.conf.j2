@@ -31,7 +31,7 @@ http {
              }
 
            location /service {
-                 alias /home/clouddata/Data_platform/dataservice/dist;
+                 alias /opt/clouddata/modules/Data_platform/DS-Server/dist;
                  index  index.html index.htm;
                  try_files $uri /index.html index.html;
                  add_header Access-Control-Allow-Origin *;
@@ -47,12 +47,12 @@ http {
              }
 
            location ~/(component|dataAsset|desktop|dispatch|exchange|handing|management|cdn)/ {
-                 root /home/clouddata/Data_platform/dist/;
+                 root /opt/clouddata/Data_platform/dist/;
                  index  index.html index.htm;
              }
 
            location  / {
-                root /home/clouddata/Data_platform/dist/desktop/;
+                root /opt/clouddata/Data_platform/dist/desktop/;
                 index  index.html index.htm;
              }
 

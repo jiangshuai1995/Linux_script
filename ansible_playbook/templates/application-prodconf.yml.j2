@@ -1,0 +1,12 @@
+# 配置项整理
+#服务端口
+server_port: 16010
+
+## mysql 服务地址
+datasource:
+  url: jdbc:mysql://{{groups['mysql']|first}}:3306/uni_datahub_merge0114?useUnicode=true&characterEncoding=utf-8&tinyInt1isBit=false&serverTimezone=GMT%2B8
+  username: root
+  password: 123456
+
+## 日志输出级别
+logging_level: debug

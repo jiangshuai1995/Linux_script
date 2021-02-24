@@ -7,14 +7,20 @@
       unarchive: src=files/UNI-DataServer.zip dest=/opt/clouddata/Data_platform/
     - name: cpoy DataAccess
       unarchive: src=files/UNI-DataAccess.zip dest=/opt/clouddata/Data_platform/
+    - name: copy DS-Server
+      unarchive: src=files/DS-Server.zip dest=/opt/clouddata/Data_platform/
     - name: copy dist
       unarchive: src=files/dist.zip dest=/opt/clouddata/Data_platform/
     - name: config  server  application-produce.yml
-      template: templates/application-produce.yml.server.j2 dest=/home/clouddata/Data_platform/UNI-DataServer/resources/application-produce.yml
+      template: templates/application-produce.yml.server.j2 dest=/opt/clouddata/Data_platform/UNI-DataServer/resources/application-produce.yml
     - name: config  access  application-produce.yml
-      template: templates/application-produce.yml.access.j2 dest=/home/clouddata/Data_platform/UNI-DataAccess/resources/application-produce.yml
+      template: templates/application-produce.yml.access.j2 dest=/opt/clouddata/Data_platform/UNI-DataAccess/resources/application-produce.yml
+    - name: config  DS-server
+      template: templates/application-prodconf.yml.j2 dest=/opt/clouddata/Data_platform/DS-Server/resources/application-prodconf.yml
     - name: boot server
       shell: chdir=/home/clouddata/Data_platform/UNI-DataServer/bin ./startServer.sh
     - name: boot access
       shell: chdir=/home/clouddata/Data_platform/UNI-DataAccess/bin ./startServer.sh
+    - name: boot DS-server
+      shell: chdir=/home/clouddata/Data_platform/DS-Server/bin ./startServer.sh
     
