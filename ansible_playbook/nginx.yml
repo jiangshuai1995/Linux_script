@@ -2,7 +2,7 @@
   hosts: nginx
   tasks:
     - name: copy nginx
-      unarchive: src=files/nginx-1.16.1.tar dest=/opt/clouddata/modules/
+      unarchive: src=files/nginx-1.16.1.tar.gz dest=/opt/clouddata/modules/
     - name: config nginx service
       template: src=nginx.service.j2 dest=/etc/systemd/system/nginx.service
     - name: config nginx.conf
