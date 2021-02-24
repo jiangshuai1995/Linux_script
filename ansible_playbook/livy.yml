@@ -8,4 +8,4 @@
     - name: copy livy-env.sh
       copy: src=templates/livy-env.sh dest=/opt/clouddata/modules/apache-livy-0.8.0-incubating-bin/conf/livy-env.sh
     - name: boot livy server
-      shell: chdir=/opt/clouddata/modules/apache-livy-0.8.0-incubating-bin/bin  nohup sh livy-server start &
+      shell: chdir=/opt/clouddata/modules/apache-livy-0.8.0-incubating-bin/bin source /etc/profile&&sh livy-server start

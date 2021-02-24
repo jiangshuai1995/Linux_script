@@ -1,0 +1,13 @@
+- name: Configure and install kubernetes
+  hosts: kubernetes_master
+  tasks:
+    - name: test
+      shell: kubeadm token create
+      register: token
+    - set_fact: test={{token.stdout}}
+    - debug: msg={{test}}
+- name: Debug
+  hosts: kubernetes_slave
+  tasks:
+    - debug: msg={{ hostvars[groups['kubernetes_master'][0]]['ansible_eth0']['ipv4']['address'] }}
+    - debug: msg={{ hostvars[groups['kubernetes_master'][0]]['test'] }}
