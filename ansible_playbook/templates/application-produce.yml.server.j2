@@ -1,62 +1,35 @@
-# 生产环境
+#开发环境
 
 # 服务器配置
 server:
   # 服务器的HTTP端口。
-  port: 8071
+  port: 5186
+  servlet:
+    context-path: /iov/rest/
 
-# Spring配置
+# Spring 配置
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
-    name: CloudData-Server
-  output:
-    ansi:
-      # 开启彩色日志
-      enabled: always
+    name: CloudData-Restful
   datasource:
     druid:
       # 8.x.x mysql驱动
       driver-class-name: com.mysql.cj.jdbc.Driver
       # 单一数据源
-      url: jdbc:mysql://{{groups['mysql']|first}}:3306/data_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+      url: jdbc:mysql://{{groups['mysql']|first}}:3306/uni_datahub_merge0114?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
       username: root
       password: 123456
-      test-while-idle: false
+  # 开启彩色日志
+  output:
+    ansi:
+      enabled: always
 
-# Dubbo 配置
-dubbo:
-  registry:
-    # provider服务注册地址
-    address: nacos://{{groups['nacos']|first}}:8848
-    # 启动时检查注册中心
-    check: false
-  scan:
-    # 扫描Services注解
-    base-packages: com.iov.console.provider
-  protocol:
-    # 以dubbo协议暴露
-    name: dubbo
-    port: -1
-    # dubbo服务提供端向消费者端发送数据的大小限制,默认8M
-    payload: 20971520
-  consumer:
-    # 启动时检查provider服务是否可用
-    check: false
-    # 订阅具有指定gv的服务
-    group: dubbo
-    version: 1.0.0
-  provider:
-    # 重试
-    retries: 0
-    # 消费超时时间
-    timeout: 60000
-    # 暴露具有指定gv的服务
-    group: dubbo
-    version: 1.0.0
-    # cached：空闲一分钟自动删除，需要时重建。 fixed:固定大小的线程池，默认200。 limited:可伸缩线程池，但池中的线程数只会增长不会收缩。
-    threadpool: cached
-  application:
-    qos-enable: false
+
+# FIXME 配置生效？ swagger地址    http://127.0.0.1:5186/iov/rest/swagger-ui.html
+swagger.ui: swagger-ui.html
+
 auth:
   authFlag: false
   confRootPath: D:\kafka_config\
@@ -64,8 +37,15 @@ auth:
   krb5File: krb5.conf
   userKeyFile: user.keytab
   userKey: lkzafk_jj
-# Mybatis相关配置
+##分片上传akka
+akka:
+  thread:
+    num: 8
+
+
+# Mybatis 配置
 mybatis:
   mapperLocations: classpath:configs/mappers/**/*.xml
   configuration:
     call-setters-on-nulls: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
