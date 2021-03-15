@@ -1,10 +1,3 @@
-- name: config ssh 
-  hosts: all
-  user: root
-  tasks:
-   - name: ssh-copy
-     authorized_key: user=root key="{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
-
 - name: Add user
   hosts: all
   tasks:

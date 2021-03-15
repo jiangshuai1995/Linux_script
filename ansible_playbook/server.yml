@@ -20,7 +20,7 @@
     - name: boot server
       shell: chdir=/home/clouddata/Data_platform/UNI-DataServer/bin ./startServer.sh
     - name: boot access
-      shell: chdir=/home/clouddata/Data_platform/UNI-DataAccess/bin ./startServer.sh
+      shell: chdir=/home/clouddata/Data_platform/UNI-DataAccess/bin ./startServer.sh  {{groups['kafka']|first}}:9000 {{groups['kafka']|first}}:5186
     - name: boot DS-server
       shell: chdir=/home/clouddata/Data_platform/DS-Server/bin ./startServer.sh
     
